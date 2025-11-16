@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+.envrc
+
+# Uploads & Data - CRITICAL: Never commit PCAP files
+uploads/
+data/*.pcap
+data/*.pcapng
+*.pcap
+*.pcapng
+
+# Logs
+*.log
+logs/
+celery.log
+uvicorn.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Frontend - SvelteKit
+node_modules/
+.svelte-kit/
+build/
+.vercel/
+.netlify/
+dist/
+package-lock.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+~*

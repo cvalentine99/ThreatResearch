@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# PCAP files - DO NOT COMMIT
+*.pcap
+*.pcapng
+uploads/
+webgui/uploads/
+webgui/data/*.pcap
+
+# Environment & Secrets
+.env
+.env.*
+*.env
+!.env.example
+
+# Logs
+*.log
+celery.log
+uvicorn.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build artifacts
+cuda-packet-parser/build/
+*.o
+*.a
+
+# Frontend
+node_modules/
+.svelte-kit/
+package-lock.json
