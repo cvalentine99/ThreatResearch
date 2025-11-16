@@ -2,10 +2,12 @@
 #include "batch_manager.h"
 #include "gpu_parser.h"
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include <iomanip>
 #include <cstring>
 #include <arpa/inet.h>
+#include <vector>
 
 void print_stats(const ParserStats& stats) {
     std::cout << "\n========== Parsing Statistics ==========" << std::endl;
@@ -71,6 +73,49 @@ void print_sample_packets(const ParsedPacket* packets, uint32_t count, uint32_t 
     std::cout << "==========================================\n" << std::endl;
 }
 
+void write_packets_json(const std::string& output_file, const std::vector<ParsedPacket>& all_packets) {
+    std::cout << "\nWriting " << all_packets.size() << " packets to JSON file: " << output_file << std::endl;
+
+    std::ofstream out(output_file);
+    if (!out.is_open()) {
+        std::cerr << "Failed to open output file: " << output_file << std::endl;
+        return;
+    }
+
+    out << "{\"packets\":[";
+
+    bool first = true;
+    for (const auto& pkt : all_packets) {
+        if (pkt.src_ip == 0) continue;  // Skip unparsed packets
+
+        if (!first) out << ",";
+        first = false;
+
+        out << "\n  {";
+        out << "\"src_ip\":\"" << ip_to_string(pkt.src_ip) << "\",";
+        out << "\"src_port\":" << pkt.src_port << ",";
+        out << "\"dst_ip\":\"" << ip_to_string(pkt.dst_ip) << "\",";
+        out << "\"dst_port\":" << pkt.dst_port << ",";
+        out << "\"protocol\":\"" << protocol_to_string(pkt.protocol) << "\",";
+        out << "\"protocol_num\":" << static_cast<int>(pkt.protocol) << ",";
+
+        if (pkt.protocol == 6) {
+            out << "\"tcp_flags\":\"0x" << std::hex << static_cast<int>(pkt.tcp_flags) << std::dec << "\",";
+        } else {
+            out << "\"tcp_flags\":null,";
+        }
+
+        out << "\"flow_hash\":\"0x" << std::hex << pkt.flow_hash << std::dec << "\",";
+        out << "\"payload_offset\":" << pkt.payload_offset;
+        out << "}";
+    }
+
+    out << "\n],\"total\":" << all_packets.size() << "}\n";
+    out.close();
+
+    std::cout << "JSON output complete!" << std::endl;
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <pcap_file> [batch_size]" << std::endl;
@@ -99,6 +144,10 @@ int main(int argc, char** argv) {
 
         // Statistics
         ParserStats stats = {0};
+
+        // Storage for all parsed packets
+        std::vector<ParsedPacket> all_parsed_packets;
+        all_parsed_packets.reserve(1000000);  // Pre-allocate for performance
 
         // Temporary CPU storage
         std::vector<PacketMetadata> cpu_metadata;
@@ -179,7 +228,7 @@ int main(int argc, char** argv) {
             stats.transfer_time_ms += transfer_ms;
             stats.total_packets += packet_count;
 
-            // Analyze results
+            // Analyze results and store parsed packets
             for (uint32_t i = 0; i < packet_count; i++) {
                 const auto& pkt = batch_mgr.get_host_output()[i];
                 if (pkt.src_ip != 0) {
@@ -187,6 +236,9 @@ int main(int argc, char** argv) {
                     stats.packets_ipv4++;
                     if (pkt.protocol == 6) stats.packets_tcp++;
                     if (pkt.protocol == 17) stats.packets_udp++;
+
+                    // Store parsed packet
+                    all_parsed_packets.push_back(pkt);
                 }
             }
 
@@ -202,6 +254,10 @@ int main(int argc, char** argv) {
 
         // Print statistics
         print_stats(stats);
+
+        // Write parsed packets to JSON file
+        std::string json_output = pcap_file + ".json";
+        write_packets_json(json_output, all_parsed_packets);
 
         // Cleanup
         cudaEventDestroy(start_gpu);

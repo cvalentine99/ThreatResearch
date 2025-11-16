@@ -1,0 +1,3 @@
+/home/cvalentine/ThreatResearch/cuda-packet-parser/build/CMakeFiles/cuda_packet_parser.dir
+/home/cvalentine/ThreatResearch/cuda-packet-parser/build/CMakeFiles/edit_cache.dir
+/home/cvalentine/ThreatResearch/cuda-packet-parser/build/CMakeFiles/rebuild_cache.dir
